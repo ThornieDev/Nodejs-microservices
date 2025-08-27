@@ -109,6 +109,21 @@ jobs:
           port: 22
           script: |
             cd ~/NodeJS-Microservices
+            # generate .env files on EC2
+            mkdir -p api-gateway post-service media-service identity-service search-service
+            echo "PORT=3000" > api-gateway/.env
+            echo "NODE_ENV=production" >> api-gateway/.env
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> api-gateway/.env
+            echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> api-gateway/.env
+            echo "IDENTITY_SERVICE_URL=${{ secrets.IDENTITY_SERVICE_URL }}" >> api-gateway/.env
+            echo "POST_SERVICE_URL=${{ secrets.POST_SERVICE_URL }}" >> api-gateway/.env
+            echo "MEDIA_SERVICE_URL=${{ secrets.MEDIA_SERVICE_URL }}" >> api-gateway/.env
+            echo "SEARCH_SERVICE_URL=${{ secrets.SEARCH_SERVICE_URL }}" >> api-gateway/.env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> api-gateway/.env
+
+            # Repeat similar steps for identity-service, post-service, media-service, search-service
+            # ...
+
             git pull origin main
             docker-compose down
             docker-compose up -d
