@@ -113,6 +113,11 @@ jobs:
             cd ~/NodeJS-Microservices
             # generate .env files on EC2
             mkdir -p api-gateway post-service media-service identity-service search-service
+
+
+              # ---------------------------
+              # API Gateway
+              # ---------------------------
             echo "PORT=3000" > api-gateway/.env
             echo "NODE_ENV=production" >> api-gateway/.env
             echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> api-gateway/.env
@@ -125,6 +130,51 @@ jobs:
 
             # Repeat similar steps for identity-service, post-service, media-service, search-service
             # ...
+
+            # ---------------------------
+            # Identity Service
+            # ---------------------------
+            echo "PORT=3001" > identity-service/.env
+            echo "NODE_ENV=production" >> identity-service/.env
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> identity-service/.env
+            echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> identity-service/.env
+            echo "MONGODB_URI=${{ secrets.IDENTITY_MONGO_URI }}" >> identity-service/.env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> identity-service/.env
+
+
+            # ---------------------------
+            # Post Service
+            # ---------------------------
+            echo "PORT=3002" > post-service/.env
+            echo "NODE_ENV=production" >> post-service/.env
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> post-service/.env
+            echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> post-service/.env
+            echo "MONGODB_URI=${{ secrets.POST_MONGO_URI }}" >> post-service/.env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> post-service/.env
+
+
+            # ---------------------------
+            # Media Service
+            # ---------------------------
+            echo "PORT=3003" > media-service/.env
+            echo "NODE_ENV=production" >> media-service/.env
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> media-service/.env
+            echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> media-service/.env
+            echo "MONGODB_URI=${{ secrets.MEDIA_MONGO_URI }}" >> media-service/.env
+            echo "CLOUD_NAME=${{ secrets.CLOUD_NAME }}" >> media-service/.env
+            echo "API_KEY=${{ secrets.CLOUD_API_KEY }}" >> media-service/.env
+            echo "API_SECRET=${{ secrets.CLOUD_API_SECRET }}" >> media-service/.env
+
+              # ---------------------------
+            # Search Service
+            # ---------------------------
+            echo "PORT=3004" > search-service/.env
+            echo "NODE_ENV=production" >> search-service/.env
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> search-service/.env
+            echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> search-service/.env
+            echo "MONGODB_URI=${{ secrets.SEARCH_MONGO_URI }}" >> search-service/.env
+
+            # Pull latest code and restart containers
 
             git pull origin main
             docker-compose down
