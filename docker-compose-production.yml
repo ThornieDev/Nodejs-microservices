@@ -1,0 +1,434 @@
+
+version: '3.9'
+
+services:
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    env_file: ./api-gateway/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      post-service:
+        condition: service_started
+      media-service:
+        condition: service_started
+      search-service:
+        condition: service_started
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - IDENTITY_SERVICE_URL=http://identity-service:3001
+      - POST_SERVICE_URL=http://post-service:3002
+      - MEDIA_SERVICE_URL=http://media-service:3003
+      - SEARCH_SERVICE_URL=http://search-service:3004
+
+  # Identity Service
+  identity-service:
+    build: ./identity-service
+    container_name: identity-service
+    ports:
+      - "3001:3001"
+    env_file: ./identity-service/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      # mongo:
+      #   condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+
+  # Post Service
+  post-service:
+    build: ./post-service
+    container_name: post-service
+    ports:
+      - "3002:3002"
+    env_file: ./post-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+
+  # Media Service
+  media-service:
+    build: ./media-service
+    container_name: media-service
+    ports:
+      - "3003:3003"
+    env_file: ./media-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+
+  # Search Service
+  search-service:
+    build: ./search-service
+    container_name: search-service
+    ports:
+      - "3004:3004"
+    env_file: ./search-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+
+
+
+
+# version: '3.9'
+
+# services:
+#   api-gateway:
+#     build: ./api-gateway
+#     container_name: api-gateway
+#     ports:
+#       - "3000:3000"
+#     env_file: ./api-gateway/.env
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   identity-service:
+#     build: ./identity-service
+#     container_name: identity-service
+#     env_file: ./identity-service/.env
+#     depends_on:
+#         - redis
+#         - rabbitmq
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   post-service:
+#     build: ./post-service
+#     container_name: post-service
+#     env_file: ./post-service/.env
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   media-service:
+#     build: ./media-service
+#     container_name: media-service
+#     env_file: ./media-service/.env
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy # optional if you add healthcheck for redis
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   search-service:
+#     build: ./search-service
+#     container_name: search-service
+#     env_file: ./search-service/.env
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   redis:
+#     image: redis:alpine
+#     container_name: redis
+#     ports:
+#       - "6379:6379"
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   rabbitmq:
+#     image: rabbitmq:3-management
+#     container_name: rabbitmq
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     healthcheck:
+#       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+# environment:
+#   - IDENTITY_SERVICE_URL=http://identity-service:3001
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# version: '3.9.1'
+
+# services:
+#   # --------------------
+#   # API Gateway
+#   # --------------------
+#   api-gateway:
+#     build: ./api-gateway
+#     container_name: api-gateway
+#     ports:
+#       - "3000:3000"
+#     env_file: ./api-gateway/.env
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#       identity-service:
+#         condition: service_started
+#       post-service:
+#         condition: service_started
+#       media-service:
+#         condition: service_started
+#       search-service:
+#         condition: service_started
+#     environment:
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+#       - IDENTITY_SERVICE_URL=http://identity-service:3001
+#       - POST_SERVICE_URL=http://post-service:3002
+#       - MEDIA_SERVICE_URL=http://media-service:3003
+#       - SEARCH_SERVICE_URL=http://search-service:3004
+
+#   # --------------------
+#   # Identity Service + DB
+#   # --------------------
+#   identity-db:
+#     image: mongo:6
+#     container_name: identity-db
+#     ports:
+#       - "27017:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: identity_user
+#       MONGO_INITDB_ROOT_PASSWORD: identity_pass
+#       MONGO_INITDB_DATABASE: identity_db
+#     healthcheck:
+#       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   identity-service:
+#     build: ./identity-service
+#     container_name: identity-service
+#     ports:
+#       - "3001:3001"
+#     env_file: ./identity-service/.env
+#     depends_on:
+#       identity-db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - MONGO_URI=mongodb://identity_user:identity_pass@identity-db:27017/identity_db
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   # --------------------
+#   # Post Service + DB
+#   # --------------------
+#   post-db:
+#     image: mongo:6
+#     container_name: post-db
+#     ports:
+#       - "27018:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: post_user
+#       MONGO_INITDB_ROOT_PASSWORD: post_pass
+#       MONGO_INITDB_DATABASE: post_db
+#     healthcheck:
+#       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   post-service:
+#     build: ./post-service
+#     container_name: post-service
+#     ports:
+#       - "3002:3002"
+#     env_file: ./post-service/.env
+#     depends_on:
+#       post-db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - MONGO_URI=mongodb://post_user:post_pass@post-db:27017/post_db
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   # --------------------
+#   # Media Service + DB
+#   # --------------------
+#   media-db:
+#     image: mongo:6
+#     container_name: media-db
+#     ports:
+#       - "27019:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: media_user
+#       MONGO_INITDB_ROOT_PASSWORD: media_pass
+#       MONGO_INITDB_DATABASE: media_db
+#     healthcheck:
+#       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   media-service:
+#     build: ./media-service
+#     container_name: media-service
+#     ports:
+#       - "3003:3003"
+#     env_file: ./media-service/.env
+#     depends_on:
+#       media-db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - MONGO_URI=mongodb://media_user:media_pass@media-db:27017/media_db
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   # --------------------
+#   # Search Service + DB
+#   # --------------------
+#   search-db:
+#     image: mongo:6
+#     container_name: search-db
+#     ports:
+#       - "27020:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: search_user
+#       MONGO_INITDB_ROOT_PASSWORD: search_pass
+#       MONGO_INITDB_DATABASE: search_db
+#     healthcheck:
+#       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   search-service:
+#     build: ./search-service
+#     container_name: search-service
+#     ports:
+#       - "3004:3004"
+#     env_file: ./search-service/.env
+#     depends_on:
+#       search-db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       rabbitmq:
+#         condition: service_healthy
+#     environment:
+#       - MONGO_URI=mongodb://search_user:search_pass@search-db:27017/search_db
+#       - REDIS_URL=redis://redis:6379
+#       - RABBITMQ_URL=amqp://rabbitmq:5672
+
+#   # --------------------
+#   # Redis
+#   # --------------------
+#   redis:
+#     image: redis:alpine
+#     container_name: redis
+#     ports:
+#       - "6379:6379"
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   # --------------------
+#   # RabbitMQ
+#   # --------------------
+#   rabbitmq:
+#     image: rabbitmq:3-management
+#     container_name: rabbitmq
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     healthcheck:
+#       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5

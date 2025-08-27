@@ -1,0 +1,223 @@
+version: '3.9'
+
+services:
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    env_file: ./api-gateway/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      post-service:
+        condition: service_started
+      media-service:
+        condition: service_started
+      search-service:
+        condition: service_started
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - IDENTITY_SERVICE_URL=http://identity-service:3001
+      - POST_SERVICE_URL=http://post-service:3002
+      - MEDIA_SERVICE_URL=http://media-service:3003
+      - SEARCH_SERVICE_URL=http://search-service:3004
+
+  # Identity Service
+  identity-service:
+    build: ./identity-service
+    container_name: identity-service
+    ports:
+      - "3001:3001"
+    env_file: ./identity-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+      - identity-db
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_URI=mongodb://identity_user:identity_pass@identity-db:27017/identity_db?authSource=admin
+
+  identity-db:
+    image: mongo:6
+    container_name: identity-db
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: identity_user
+      MONGO_INITDB_ROOT_PASSWORD: identity_pass
+    volumes:
+      - identity_data:/data/db
+
+  identity-express:
+    image: mongo-express
+    container_name: identity-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: identity_user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: identity_pass
+      ME_CONFIG_MONGODB_SERVER: identity-db
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+
+  # Post Service
+  post-service:
+    build: ./post-service
+    container_name: post-service
+    ports:
+      - "3002:3002"
+    env_file: ./post-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+      - post-db
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_URI=mongodb://post_user:post_pass@post-db:27017/post_db?authSource=admin
+
+  post-db:
+    image: mongo:6
+    container_name: post-db
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: post_user
+      MONGO_INITDB_ROOT_PASSWORD: post_pass
+    volumes:
+      - post_data:/data/db
+
+
+  post-express:
+    image: mongo-express
+    container_name: post-express
+    restart: always
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: post_user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: post_pass
+      ME_CONFIG_MONGODB_SERVER: post-db
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+
+  # Media Service
+  media-service:
+    build: ./media-service
+    container_name: media-service
+    ports:
+      - "3003:3003"
+    env_file: ./media-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+      - media-db
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_URI=mongodb://media_user:media_pass@media-db:27017/media_db?authSource=admin
+
+  media-db:
+    image: mongo:6
+    container_name: media-db
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: media_user
+      MONGO_INITDB_ROOT_PASSWORD: media_pass
+    volumes:
+      - media_data:/data/db
+
+  
+  media-express:
+    image: mongo-express
+    container_name: media-express
+    restart: always
+    ports:
+      - "8083:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: media_user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: media_pass
+      ME_CONFIG_MONGODB_SERVER: media-db
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+
+  # Search Service
+  search-service:
+    build: ./search-service
+    container_name: search-service
+    ports:
+      - "3004:3004"
+    env_file: ./search-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+      - search-db
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - MONGODB_URI=mongodb://search_user:search_pass@search-db:27017/search_db?authSource=admin
+
+  search-db:
+    image: mongo:6
+    container_name: search-db
+    ports:
+      - "27021:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: search_user
+      MONGO_INITDB_ROOT_PASSWORD: search_pass
+    volumes:
+      - search_data:/data/db
+
+  search-express:
+    image: mongo-express
+    container_name: search-express
+    restart: always
+    ports:
+      - "8084:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: search_user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: search_pass
+      ME_CONFIG_MONGODB_SERVER: search-db
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  identity_data:
+  post_data:
+  media_data:
+  search_data:

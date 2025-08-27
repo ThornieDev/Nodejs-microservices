@@ -111,7 +111,7 @@ const refreshTokenUser = async (req, res) => {
       });
     }
 
-    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    // const storedToken = await RefreshToken.findOne({ token: refreshToken });
 
     const storedToken = await RefreshToken.deleteOne({ token: refreshToken });
     
