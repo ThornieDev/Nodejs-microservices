@@ -99,8 +99,8 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.AWS_EC2_IP }} >> ~/.ssh/known_hosts || true
-          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.AWS_EC2_SSH_KEY }}" > ~/.ssh/key-instance.pem
+          chmod 600 ~/.ssh/key-instance.pem
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.5
